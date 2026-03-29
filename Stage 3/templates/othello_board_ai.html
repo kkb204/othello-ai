@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Othello Board</title>
+    <style>
+        .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center; /* Vertically align items in the middle */
+            height: 70vh; /* Full height of the viewport */
+        }
+        .board_grid {
+            display: grid;
+            gap: 2px;
+            background: #006400;
+            padding: 10px;
+            width: fit-content;
+            margin: 40px auto;
+        }
+        .cell {
+            width: 60px;
+            height: 60px;
+            background: #228B22;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+        .cell:hover {
+            background: #dd0712;
+        } 
+        .piece {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
+        .black {
+            background: #2b14f9;
+        }
+        .white {
+            background: #fff8ad;
+            border: 1px solid #222;
+        }
+        #messageBox{
+            height: 10em; /* Adjust as needed */
+            overflow-y: auto; /* Enable vertical scrolling */
+            white-space: pre-line; /* Preserve line breaks */
+            line-height: 1em; /* Adjust as needed */
+        }
+    </style>
+    <script>
+        //Get the board that is passed from the python flask code
+        let board = {{game_board|tojson}};
+        //console.log(board);
+
+        // Load the grid format once the page has loaded
+        
+        document.addEventListener('DOMContentLoaded', function() {
+        loadBoard();
+             // Add a click event listener to the button with ID 'save'
+            document.getElementById('save').addEventListener('click', async () => {
+                // Grab the game log from the HTML
+                let messageBox = document.getElementById('messageBox');
+                let messages = messageBox.innerText.split('\n'); // Convert to array
+
+                 // Send both board and log to Flask
+                const response = await fetch('/save_game', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    board: board,
+                    log: messages
+                })
+            });
+
+                const result = await response.text();
+                alert(result); // Confirm save
+            });
+
+            // Add a click event listener to the button with ID 'load'
+            document.getElementById('load').addEventListener('click', async () => {
+                const response = await fetch('/load_game');
+                const data = await response.json(); 
+
+                // Load the board
+                board = data['board'];
+                loadBoard();  
+
+                // Load the game log
+                loadGameLog(data['log']);
+            });
+
+        });
+
+        function sendMove(x, y, url) {
+            /**
+            * do a GET request to the server with the x and y coordinates for the move
+            * The server will respond with a JSON object containing whether the move was legal
+            */
+
+            fetch(url+'?x='+x+'&y='+y, {
+                method: 'GET',
+            })
+            .then(response => response.json())
+            .then(data => {
+                //Process the response
+                if (data['status'] === 'success'){
+                    updateMessageBox('Move accepted at (' + x + ', ' + y + ')');
+                    updateMessageBox("It's " + data['player'] + "'s turn.");
+                    //Update the board
+                    board = data['board'];
+                    
+                    //Reload the board
+                    loadBoard();}    
+
+                    // added
+                    if (data['player'] === 'Light') {
+                        setTimeout(() => {
+                            callAIMove();
+                        }, 3000);
+                    }
+                else if (data['status'] === 'fail'){
+                    updateMessageBox('Invalid move at (' + x + ', ' + y + '): ' + data['message']);}
+                
+                else if (data['status'] === 'game_over'){
+                    // Game is finished
+                    board = data['board'];
+                    loadBoard();
+
+                    // Use the finished dictionary
+                    let darkCount = data['finished']['dark'];
+                    let lightCount = data['finished']['light'];
+                    let winner = data['winner'];
+
+                    document.getElementById('messageBox').innerHTML = 
+                        "Game Over! Winner: " + winner + 
+                        " | Dark: " + darkCount + 
+                        " Light: " + lightCount;
+
+                    alert("Game Over! Winner: " + winner + 
+                        " | Dark: " + darkCount + 
+                        " Light: " + lightCount);
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+        // Automatic AI move
+        function callAIMove() {
+            fetch('/ai_move', { method: 'GET' })
+            .then(response => response.json())
+            .then(data => {
+
+                if (data['status'] === 'success') {
+
+                    let move = data['ai_move']; // {x: ?, y: ?}
+                    
+                    // Update game log 
+                    updateMessageBox("AI (Light) placed a piece at (" + move.x + ", " + move.y + ")");
+                    updateMessageBox("It's " + data['player'] + "'s turn.");
+
+                    board = data['board'];
+                    loadBoard();
+                } 
+                else if (data['status'] === 'game_over'){
+                    // Game is finished
+                    board = data['board'];
+                    loadBoard();
+
+                    // Use the finished dictionary
+                    let darkCount = data['finished']['dark'];
+                    let lightCount = data['finished']['light'];
+                    let winner = data['winner'];
+
+                    document.getElementById('messageBox').innerHTML = 
+                        "Game Over! Winner: " + winner + 
+                        " | Dark: " + darkCount + 
+                        " Light: " + lightCount;
+
+                    alert("Game Over! Winner: " + winner + 
+                        " | Dark: " + darkCount + 
+                        " Light: " + lightCount);
+                }
+            
+                else {
+                    updateMessageBox("AI move failed: " + data['message']);
+                }
+            })
+            .catch(err => console.error("AI error:", err));
+        }
+
+    
+        function loadBoard() {
+            for (let y = 0; y < board.length; y++) {
+                for (let x = 0; x < board[y].length; x++) {
+                    let cell = document.getElementById(`cell-${x}-${y}`);
+                    cell.innerHTML = ''; // Clear existing pieces
+                    if (board[y][x] === 'Dark ') {
+                        let piece = document.createElement('div');
+                        piece.className = 'piece black';
+                        cell.appendChild(piece);
+                    } else if (board[y][x] === 'Light') {
+                        let piece = document.createElement('div');
+                        piece.className = 'piece white';
+                        cell.appendChild(piece);
+                    }
+                }
+            }
+        }
+        function loadGameLog(messages) {
+            let messageBox = document.getElementById('messageBox');
+
+            // Clear only existing messages, keep the heading
+            messageBox.innerHTML = '';
+
+            // Append each message on a new line
+            messages.forEach(msg => {
+                if (msg.trim() !== "") { // skip empty lines
+                    const line = document.createElement('div');
+                    line.textContent = msg; // ensures proper line breaks
+                    messageBox.appendChild(line);
+                }
+            });
+
+            // Scroll to the bottom automatically
+            messageBox.scrollTop = messageBox.scrollHeight;
+        }
+
+        function updateMessageBox(message) {
+            let messageBox = document.getElementById('messageBox');
+            messageBox.innerHTML += message + '\n';
+            messageBox.scrollTop = messageBox.scrollHeight; // Auto-scroll to the bottom
+        }
+    </script>
+</head>
+<body>
+    <h1 style="text-align:center;">Othello/Reversi Game</h1>
+    <div class="container">
+        <div class="board_grid"
+     style="grid-template-columns: repeat({{ game_board|length }}, 60px);
+            grid-template-rows: repeat({{ game_board|length }}, 60px);">
+            {% for i in range(game_board|length) %}
+                {% for j in range(game_board|length) %}
+                    <div class="cell" id = "cell-{{ j }}-{{ i }}" onclick="sendMove({{ j+1 }}, {{ i+1 }}, &#39;/move&#39;)">
+                        {% if game_board[i][j] == 'Dark ' %}
+                            <div class="piece black"></div>
+                        {% elif game_board[i][j] == 'Light' %}
+                            <div class="piece white"></div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+    <div id="game_controls">
+        <button id="save">Save Game</button>
+        <button id="load">Load Game</button>
+        <input type="file" id="load_input" style="display:none">
+    </div>
+    <div id="messageBox" style="width: 80%; height: 10vh; border: 1px solid black; padding: 10px; overflow-y: auto;">
+        <h2>Game Log:</h2>
+    </div>
+</body>
+</html>

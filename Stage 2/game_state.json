@@ -1,0 +1,95 @@
+{
+  "current_player": "Dark ",
+  "game_board": [
+    [
+      "None ",
+      "None ",
+      "None ",
+      "None ",
+      "None ",
+      "None ",
+      "None ",
+      "None "
+    ],
+    [
+      "None ",
+      "None ",
+      "None ",
+      "None ",
+      "None ",
+      "None ",
+      "None ",
+      "None "
+    ],
+    [
+      "None ",
+      "None ",
+      "None ",
+      "None ",
+      "Light",
+      "None ",
+      "None ",
+      "None "
+    ],
+    [
+      "None ",
+      "None ",
+      "Dark ",
+      "Dark ",
+      "Light",
+      "None ",
+      "None ",
+      "None "
+    ],
+    [
+      "None ",
+      "None ",
+      "None ",
+      "Dark ",
+      "Light",
+      "None ",
+      "None ",
+      "None "
+    ],
+    [
+      "None ",
+      "None ",
+      "None ",
+      "None ",
+      "None ",
+      "None ",
+      "None ",
+      "None "
+    ],
+    [
+      "None ",
+      "None ",
+      "None ",
+      "None ",
+      "None ",
+      "None ",
+      "None ",
+      "None "
+    ],
+    [
+      "None ",
+      "None ",
+      "None ",
+      "None ",
+      "None ",
+      "None ",
+      "None ",
+      "None "
+    ]
+  ],
+  "move_counters": {
+    "Dark ": 59,
+    "Light": 59
+  },
+  "game_log": [
+    " ",
+    "Game Log:",
+    "",
+    " Move accepted at (3, 4) It's Light's turn. Move accepted at (5, 3) It's Dark 's turn. "
+  ]
+}
