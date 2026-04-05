@@ -6,7 +6,7 @@ A web-based Othello game built with Python and Flask, featuring an AI opponent.
 - Tools/Frameworks: Flask
 
 ## Overview 
-Othello is a two player game where each player is either the dark or light counter on the game board. The aim is the colour the game board with the most of your colour counter. The AI opponent usesa  greedy algorithm to select the move that maximises the number of counters flipped each turn.
+Othello is a two player game where each player is either the dark or light counter on the game board. The aim is to colour the game board with the most of your colour counter. The AI opponent uses a  greedy algorithm to select the move that maximises the number of counters flipped each turn.
 
 ## How to run
 Since files are in different folders, the code in the ‘flask_game_engine_ai.py’ file needs to be changed so that the path to imported files matches those on your computer. Currently, this is what the code looks like: sys.path.append("/Users/kiritbhatti/Downloads/programming_coursework_2/Stage 1")
